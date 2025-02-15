@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider } from '@mui/material/styles';
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import { ThemeProvider } from './theme';
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress
+} from './components';
 
 const Popup = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -9,9 +14,7 @@ const Popup = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status
     checkAuthStatus();
-    // Fetch today's applications
     fetchTodayApplications();
   }, []);
 
@@ -27,9 +30,10 @@ const Popup = () => {
 
   const fetchTodayApplications = async () => {
     try {
-      const response = await fetch('API_URL/applications/today', {
+      const token = await chrome.storage.local.get('authToken');
+      const response = await fetch('https://api.hiresync.com/applications/today', {
         headers: {
-          'Authorization': `Bearer ${await chrome.storage.local.get('authToken')}`
+          'Authorization': `Bearer ${token.authToken}`
         }
       });
       const data = await response.json();
@@ -37,10 +41,6 @@ const Popup = () => {
     } catch (error) {
       console.error('Failed to fetch applications:', error);
     }
-  };
-
-  const openDashboard = () => {
-    chrome.tabs.create({ url: 'DASHBOARD_URL' });
   };
 
   if (loading) {
@@ -55,9 +55,9 @@ const Popup = () => {
           <Typography variant="body1">
             Applications today: {todayApplications}
           </Typography>
-          <Button 
-            variant="contained" 
-            onClick={openDashboard}
+          <Button
+            variant="contained"
+            onClick={() => chrome.tabs.create({ url: 'https://app.hiresync.com' })}
             fullWidth
             sx={{ mt: 2 }}
           >
@@ -65,9 +65,9 @@ const Popup = () => {
           </Button>
         </>
       ) : (
-        <Button 
-          variant="contained" 
-          onClick={() => chrome.tabs.create({ url: 'LOGIN_URL' })}
+        <Button
+          variant="contained"
+          onClick={() => chrome.tabs.create({ url: 'https://app.hiresync.com/login' })}
           fullWidth
         >
           Login to HireSync
@@ -79,7 +79,7 @@ const Popup = () => {
 
 const root = createRoot(document.getElementById('popup-root'));
 root.render(
-  <ThemeProvider theme={theme}>
+  <ThemeProvider>
     <Popup />
   </ThemeProvider>
 );
